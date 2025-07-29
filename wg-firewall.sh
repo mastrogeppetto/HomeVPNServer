@@ -4,6 +4,8 @@
 
 # Rete WireGuard dietro NAT Docker (modifica se diversa)
 WG_NET="172.28.5.0/24"
+CLIENT_NET="10.8.0.0/24"
+DNS="172.28.5.102"
 
 # Array di host:porta consentiti
 ALLOWED_LIST=(
@@ -33,3 +35,7 @@ iptables -A DOCKER-USER -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -C DOCKER-USER -s "$WG_NET" -j DROP 2>/dev/null || \
 iptables -A DOCKER-USER -s "$WG_NET" -j DROP
 
+iptables -I DOCKER-USER 1 -s "$CLIENT_NET" -d "$DNS" -p udp --dport 53 -j ACCEPT
+iptables -I DOCKER-USER 2 -s "$CLIENT_NET" -d "$DNS" -p tcp --dport 53 -j ACCEPT
+iptables -I DOCKER-USER 1 -s "$DNS" -p udp --dport 53 -j ACCEPT
+iptables -I DOCKER-USER 1 -s "$DNS" -p tcp --dport 53 -j ACCEPT
