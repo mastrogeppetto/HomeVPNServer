@@ -29,6 +29,7 @@ services:
       - WG_HOST=5cvm118.duckdns.org
       - PASSWORD=asterix
       - WG_DEFAULT_DNS=172.28.5.102
+      - WG_ALLOWED_IPS=10.8.0.0/24,172.28.5.0/24,192.168.113.0/24
     volumes:
       - ./wg-easy-data:/etc/wireguard
     ports:      
