@@ -1,0 +1,64 @@
+Hai di nuovo l'errore "porta 53 impegnata" da 127.0.0.53! Questo è un classico caso di systemd-resolved che riprende il controllo della porta 53 dopo un riavvio del sistema.
+
+Come abbiamo discusso in precedenza con Pi-hole, la stessa identica procedura si applica al tuo container dnsmasq_server. La causa è quasi sempre che systemd-resolved si riavvia e si mette in ascolto sulla porta 53, impedendo a Docker di mappare la porta per il tuo container DNS.
+
+Evidentemente, le modifiche che avevi fatto per disabilitare systemd-resolved non sono state rese persistenti o sono state in qualche modo ripristinate (a volte un aggiornamento di sistema può farlo).
+
+Ecco i passaggi che devi ripetere sul tuo HOST Docker per liberare la porta 53 in modo persistente:
+
+Passaggi per Liberare la Porta 53 da systemd-resolved (sul tuo HOST Docker)
+Verifica che systemd-resolved sia in ascolto sulla porta 53:
+
+Bash
+
+sudo lsof -i :53
+# OPPURE
+sudo netstat -tulnp | grep :53
+Dovresti vedere un processo chiamato systemd-resolve o systemd-resolved che occupa la porta 53.
+
+Ferma il servizio systemd-resolved:
+
+Bash
+
+sudo systemctl stop systemd-resolved
+Modifica il file di configurazione di systemd-resolved:
+Apri il file /etc/systemd/resolved.conf con un editor di testo (es. nano):
+
+Bash
+
+sudo nano /etc/systemd/resolved.conf
+Trova la riga che inizia con DNSStubListener=. Se è commentata (ha un # davanti), scommentala. Poi assicurati che il suo valore sia no:
+
+Ini, TOML
+
+[Resolve]
+#... altre righe ...
+DNSStubListener=no
+#... altre righe ...
+Salva il file e chiudi l'editor.
+
+Elimina il symlink di /etc/resolv.conf e configuralo per usare DNS pubblici:
+systemd-resolved crea un symlink da /etc/resolv.conf a /run/systemd/resolve/stub-resolv.conf. Dobbiamo rimuoverlo e puntare /etc/resolv.conf a server DNS pubblici.
+
+Bash
+
+sudo rm /etc/resolv.conf
+sudo sh -c 'echo "nameserver 1.1.1.1" >> /etc/resolv.conf'
+sudo sh -c 'echo "nameserver 1.0.0.1" >> /etc/resolv.conf'
+(Puoi usare i server DNS che preferisci, es. 8.8.8.8, 8.8.4.4 di Google).
+
+Riavvia il servizio systemd-resolved:
+
+Bash
+
+sudo systemctl start systemd-resolved
+Ora systemd-resolved dovrebbe essere avviato, ma senza occupare la porta 53.
+
+Verifica che la porta 53 sia libera sull'host:
+
+Bash
+
+sudo lsof -i :53
+# OPPURE
+sudo netstat -tulnp | grep :53
+Questa volta, l'output non dovrebbe mostrare alcun processo in ascolto sulla porta 53.
