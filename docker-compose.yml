@@ -9,7 +9,7 @@ services:
       # Se userai SSL (Let's Encrypt o certificati personali):
       # - /opt/nginx/ssl/:/etc/nginx/ssl/:ro # Directory per i certificati SSL
       # - ./templates:/etc/nginx/templates
-      - ./site:/usr/share/nginx/html:ro # Pagina di benvenuto
+      - ./index.html:/usr/share/nginx/html/index.html:ro # Pagina di benvenuto
     ports:
       - "80:80"   # Espone la porta HTTP standard sull'host
       - "443:443" # Espone la porta HTTPS standard (se userai SSL)
